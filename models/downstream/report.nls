@@ -1,0 +1,16 @@
+extensions [array table]
+globals [week-cnt view-cnt]
+
+to get-grid-view [t sp_model ]
+  if t >= view-cnt
+  [ set t int t
+    export-view (word "./netlogo_output/views/"sp_model"_" t "_" my-seed ".png")
+    set view-cnt view-cnt + 1.0]
+end
+  
+to get-world [t sp_model]
+  if t >= week-cnt
+  [ set t int t
+    export-world (word "./netlogo_output/worlds/"sp_model"_" t "_" my-seed ".csv")
+    set week-cnt week-cnt + 1.0]
+end

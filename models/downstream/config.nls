@@ -1,0 +1,24 @@
+globals [model generate_views generate_world predefinedSeed sims-duration division-bias diffusion r lambda gamma rho delta densityBias crowdingCutOff immediate-stratification induction induction-time visualize-clones clone-colours]
+
+to load-config-variables
+ set model "downstream"
+ set generate_views true
+ set generate_world true
+ set predefinedSeed 0
+ set sims-duration 80 ;simulation time in weeks
+ set division-bias false ;division directionality bias observed in oesophagus
+ set diffusion false
+ ;set model parameters
+ set r 0.06
+ set lambda 1.16
+ set gamma 3.9
+ set rho gamma / (lambda + gamma)
+ set delta 0.95 ; fate imbalance parameter of mutant cells
+ set densityBias true ;activate/deactivate cell density dependent feedback
+ set crowdingCutOff 7 ;number of neighbours above which the neighbourhood is considered "crowded"
+ set immediate-stratification true
+ set induction 0.004 ;mutant induction level
+ set induction-time 0 ;time when mutant cells are introduced (in weeks)
+ set visualize-clones false
+ set clone-colours array:from-list [[0 0 0] [166 0 0] [64 0 0] [217 108 108] [242 85 61] [255 200 191] [153 120 115] [51 40 38] [102 46 26] [255 162 128] [255 102 0] [179 152 134] [217 116 0] [102 54 0] [255 196 128] [102 78 51] [51 27 0] [242 222 182] [191 153 0] [166 149 83] [255 238 0] [76 73 19] [51 49 26] [172 191 96] [144 217 0] [31 115 0] [140 179 134] [0 255 0] [0 64 0] [127 255 128] [57 77 68] [22 89 67] [191 255 234] [0 217 173] [77 153 148] [64 242 255] [0 61 77] [51 173 204] [134 170 179] [0 136 204] [32 96 128] [0 26 64] [61 133 242] [45 62 89] [182 206 242] [0 19 140] [64 64 128] [80 57 230] [186 121 242] [225 191 255] [51 0 77] [204 0 255] [133 105 140] [140 35 133] [51 26 49] [230 57 195] [89 0 48] [230 172 203] [229 57 126] [140 70 98] [255 0 68] [140 35 49]]
+end

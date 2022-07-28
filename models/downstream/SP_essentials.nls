@@ -1,0 +1,247 @@
+__includes ["config.nls" "report.nls"]
+globals [my-seed current-time cloneCnt ]
+
+turtles-own [
+  immediate-neighbors     ;; agentset of 6 neighboring cells (or 4 to simulate division directionality bias observed in oesophagus)
+  extended-neighbors ;; agenset of the 18 extended neighboring cells
+  six-neighbors
+  cell-type         ;; type of epithelial cell agent (A,B,AA,AB,BA,BB,empty)
+  state             ;; epithelial cell state (single occupancy, double occupancy, empty)
+  time              ;; time of next event
+  cloneID           ;; unique clone ID
+  creation-time     ;; creation time of a cell
+  mutation-status      ;; "p53" for p53 mutants, "WT" for WT cells
+  fate-bias         ;; 0 for WT cells or delta for mutated cells
+]
+
+
+to create-seed
+  ifelse predefinedSeed = 0
+  [set my-seed new-seed]
+  [set my-seed predefinedSeed]
+  output-print word "Generated seed: " my-seed
+  random-seed my-seed
+end
+
+to setup-grid
+  ; set grid architecture
+  set-default-shape turtles "hex"
+  ask patches
+    [ set pcolor white sprout 1
+        [;; shift even columns down
+          if pxcor mod 2 = 0
+            [ set ycor ycor - 0.5 ] ] ]
+
+end
+
+to setup-cells
+  ;initialise time and cell properties for every cell on the grid
+  ask turtles
+     [set-cell "B" 0 "WT" 0 ;set-cell arguments: cellType parentCloneID mut fateBias
+      set time 0.0]
+  
+  ;distribute A cells randomly on the grid in order to match rho proportion
+  while [alpha-proportion < rho]
+  [
+    ask patch random-xcor random-ycor [ask turtles-here [set-cell "A" 0 "WT" 0]]
+  ]
+  
+  ; set cloneID for A cells
+  if induction-time = 0
+  [ask turtles with [ cell-type = "A"] [initialize-clone]]
+  
+  ;; set up the hex-neighbors agentsets
+  ask turtles [define-neighbors]
+end
+
+to initialize-clone
+  set cloneID cloneCnt + 1
+  set cloneCnt cloneCnt + 1
+  
+  if visualize-clones = true and cloneID < array:length clone-colours
+  [set color array:item clone-colours cloneID]
+end
+
+to insert-mutants
+  while [mutant-proportion < induction]
+  [
+    ask one-of turtles with [cell-type = "A"] 
+    [set mutation-status "p53" 
+     set color grey
+     set fate-bias delta
+    ]
+  ]
+end  
+
+to define-neighbors
+   ifelse pxcor mod 2 = 0
+      [set six-neighbors turtles-on patches at-points [[0 1] [1 0] [1 -1] [0 -1] [-1 -1] [-1 0]]]
+      [set six-neighbors turtles-on patches at-points [[0 1] [1 1] [1  0] [0 -1] [-1  0] [-1 1]]]  
+  
+  ifelse division-bias = true
+   [ ifelse pxcor mod 2 = 0
+      [set immediate-neighbors turtles-on patches at-points [[1 0] [1 -1] [-1 -1] [-1 0]]
+       set extended-neighbors turtles-on patches at-points [[2 1] [2 0] [2 -1] [-2 -1] [-2 0] [-2 1]]
+      ]
+      [set immediate-neighbors turtles-on patches at-points [[1 1] [1  0] [-1  0] [-1 1]]
+       set extended-neighbors turtles-on patches at-points [[2 1] [2 0] [2 -1] [-2 -1] [-2 0] [-2 1]] 
+      ]  
+   ]
+   [
+     ifelse pxcor mod 2 = 0
+      [set immediate-neighbors turtles-on patches at-points [[0 1] [1 0] [1 -1] [0 -1] [-1 -1] [-1 0]]
+       set extended-neighbors turtles-on patches at-points [[0 2] [1 1] [2 1] [2 0] [2 -1] [1 -2] [0 -2] [-1 -2] [-2 -1] [-2 0] [-2 1] [-1 1]]
+      ]
+      [set immediate-neighbors turtles-on patches at-points [[0 1] [1 1] [1  0] [0 -1] [-1  0] [-1 1]]
+       set extended-neighbors turtles-on patches at-points [[0 2] [1 1.5] [2 1] [2 0] [2 -1] [1 -1] [0 -2] [-1 -1] [-2 -1] [-2 0] [-2 1] [-1 2]]
+      ]  
+   ]
+end  
+
+to-report set-nextTime [rate elapsedTime] ; either division rate or stratification rate
+  ifelse elapsedTime < 1 / rate
+   [report random-exponential (1 / rate - elapsedTime) + current-time]
+   [report current-time]
+end
+
+to set-cell [cellType parentCloneID mut fateBias]
+  let defaultCellTypeColours table:from-list [["A" yellow] ["B" blue] ["empty" white] 
+                                              ["AA" green]["AB" green]
+                                              ["BA" green] ["BB" green]]
+  
+  set cell-type cellType
+  set state "single"
+  set creation-time current-time
+  
+  set mutation-status mut
+  set fate-bias fateBias  
+
+;When immediate stratification is applied, AB,BA and BB double cells exit instantaneously
+ifelse immediate-stratification = true
+ [
+  if cell-type = "AA" 
+    [set state "double"]
+  
+  if cell-type = "AB" or cell-type = "BA"
+    [set cell-type "A"
+     set time set-nextTime lambda 0
+    ]
+  
+  if cell-type = "BB"
+    [set cell-type "B"
+     set time set-nextTime gamma 0
+    ]
+  ]
+  [
+   if cell-type != "A" and cell-type != "B" and cell-type != "empty" 
+   [set state "double"]
+  ]  
+
+  ifelse visualize-clones = true
+    [ ifelse parentCloneID < array:length clone-colours
+      [set color array:item clone-colours parentCloneID] 
+      [set color black ]
+    ]  
+    [ ifelse mut = "p53"
+      [ 
+        ifelse state = "double"
+        [set color black]
+        [set color grey]
+      ]
+      [set color table:get defaultCellTypeColours cell-type]
+    ]
+  
+  if cell-type = "empty"
+  [set cloneID parentCloneID
+   set state "empty"
+  ] ;for empty cells cloneID is set here and is always 0 (parentCloneID = 0)
+end
+
+to move-cell [agFrom agTo ]
+  ask agTo 
+    [set cell-type [cell-type] of agFrom
+     set color [color] of agFrom
+     set state [state] of agFrom
+     set cloneID [cloneID] of agFrom
+     set time [time] of agFrom
+     set creation-time [creation-time] of agFrom
+     set mutation-status [mutation-status] of agFrom
+     set fate-bias [fate-bias] of agFrom
+  ]
+  
+end 
+
+to-report alpha-proportion
+  let alpha count turtles with [cell-type = "A"]
+  let all count turtles
+  report alpha / all
+end
+
+to-report mutant-proportion
+  let p53 count turtles with [mutation-status = "p53"]
+  let all count turtles ;num-of-cells turtles
+  report p53 / all
+end
+
+to-report density-bias [neighborhoodDensity]  
+  let feedbackBias 0
+  
+  ifelse neighborhoodDensity > crowdingCutOff
+    [set feedbackBias -1 * delta] ; when neighbourhood is crowded mutant cells stop having the bias towards symmetric proliferation
+    [set feedbackBias 0]  
+  
+  report feedbackBias  
+end
+
+
+to-report select-division-type [fateBias feedbackBias]
+  let pAA r * (1 + fateBias + feedbackBias)
+  let pAB 1 / 2 - r
+  let pBA pAB
+  let pBB r * (1 - fateBias - feedbackBias)
+   
+  let rnd random-float 1.0 
+  
+  let div-type array:from-list [0 0]
+  
+  ifelse rnd < pAA
+    [array:set div-type 0 "A"
+     array:set div-type 1 "A"]
+  [ifelse rnd < pAA + pAB
+   [array:set div-type 0 "A"
+    array:set div-type 1 "B"]
+  [ifelse rnd < pAA + pAB + pBA
+   [array:set div-type 0 "B"
+    array:set div-type 1 "A"]
+  [if rnd < pAA + pAB + pBA + pBB
+   [array:set div-type 0 "B"
+    array:set div-type 1 "B"]
+   ]]]
+  
+  report div-type
+end
+
+to create-daughter-cell [parentCloneID cellType rate elapsedTime mut fateBias]
+  set-cell cellType parentCloneID mut fateBias
+  set cloneID parentCloneID
+  set time set-nextTime rate elapsedTime
+end
+
+to-report get-random-common-neighbor [ag1 ag2]
+  let common-neighbors []
+  let n1 [immediate-neighbors] of ag1
+  let n2 [immediate-neighbors] of ag2
+  ask n1 [let n1x xcor
+          let n1y ycor
+          ask n2
+          [if (xcor = n1x and ycor = n1y)
+          [set common-neighbors turtles with [xcor = n1x and ycor = n1y]]]]
+  report one-of common-neighbors
+end
+
+to-report num-of-cells [agentSet]
+  let singles count agentSet with [state = "single"]
+  let doubles count agentSet with [state = "double"]
+
+  report singles + 2 * doubles
+end
