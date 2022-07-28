@@ -1,6 +1,6 @@
 # Introduction
 
-This repository contains the spatial single progenitor models that simulate the collective behaviour of cells in epithelial tissues and the spread of mutant cells. It also contains a collection of python scripts for analysing the outputs of model simulations.
+This repository contains the spatial non-neutral single progenitor models that simulate the collective behaviour of cells in epithelial tissues and the spread of mutant cells. It also contains a collection of python scripts for analysing the outputs of model simulations. More detailed description of these models can be found in this [manuscript](https://royalsocietypublishing.org/doi/full/10.1098/rsif.2021.0607) by Kostiou et al.
 
 # Directory Structure:
 
