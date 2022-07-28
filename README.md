@@ -1,8 +1,8 @@
-#Introduction
+# Introduction
 
 This repository contains the spatial single progenitor models that simulate the collective behaviour of cells in epithelial tissues and the spread of mutant cells. It also contains a collection of python scripts for analysing the outputs of model simulations.
 
-#Directory Structure:
+# Directory Structure:
 
  - **downstream**: contains the downstream feedback model
  - **upstream**: contains the upstream feedback model
@@ -18,7 +18,7 @@ This repository contains the spatial single progenitor models that simulate the 
 - **netlogo_output**: Directories for storing output files - initially empty. For enabling see generate_views, generate_ world parameters in `config.nls`
 - **analysis_output**: Directories for storing analysis output plots and pickled variables.
 
-#How to run:
+# How to run:
 
 ## Option 1: Using NetLogo graphical interface
 
@@ -77,7 +77,7 @@ The following commands demonstrate how to run the SP spatial models in headless 
 
 For more information and examples on how to run NetLogo in headless mode see https://ccl.northwestern.edu/netlogo/docs/behaviorspace.html#advanced-usage
 
-#Configuration Parameters:	
+# Configuration Parameters:	
 	
 Model and simulation parameters can be set in the `config.nls` file. This may be opened using your prefered text editor or directly in the NetLogo environment. To open it in NetLogo click on the **Included Files** menu (`SP_essentials.nls` should be opened first). The `config.nls` file contains the following variables:
 
@@ -100,7 +100,7 @@ Model and simulation parameters can be set in the `config.nls` file. This may be
 - `fdelta`: neighbourhood density feedback bias in fate decision (min:0, max:1) - in upstream and unified models
 - `visualize-clones`: set to true to colorise distinct clones instead of cell types. Mutant and wild type cells are not distiguished in this colouring scheme. 
 
-#Grid visualisation colour schemes:
+# Grid visualisation colour schemes:
 
 The SP spatial models have the following colouring schemes:
 
@@ -126,7 +126,7 @@ The SP spatial models have the following colouring schemes:
   - DN_Maml1 mutants: red
   - empty spaces: white
 
-#Analysis:
+# Analysis:
 
 ### Analysis workflows
 
